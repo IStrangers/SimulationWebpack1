@@ -4,6 +4,7 @@ const babylon = require("babylon")
 const babelTypes = require("@babel/types")
 const babelTraverse = require("@babel/traverse").default
 const babelGenerator = require("@babel/generator").default
+const ejs = require("ejs")
 
 class Compiler{
 
@@ -13,6 +14,7 @@ class Compiler{
     this.entry = config.entry
     this.modules = {}
     this.root = process.cwd()
+    this.assets = {}
   }
 
   run() {
@@ -58,6 +60,14 @@ class Compiler{
   }
 
   emitFile() {
+    const template = this.getSource(path.join(__dirname,"main.ejs"))
+    const code = ejs.render(template,{ entryId: this.entryId,modules: this.modules })
+    const main = path.join(this.config.output.path,this.config.output.filename)
+    this.assets[main] = code
+    if(!fs.existsSync(this.config.output.path)) {
+      fs.mkdirSync(this.config.output.path)
+    }
+    fs.writeFileSync(main,this.assets[main])
   }
 
 }
