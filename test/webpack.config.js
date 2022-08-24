@@ -1,5 +1,14 @@
 const path = require("path")
 
+class TestPlugin {
+  apply(context) {
+    context.hooks.emit.tap("emit",function() {
+      console.log("TestPlugin: emit")
+    })
+    console.log("TestPlugin: ",context)
+  }
+}
+
 module.exports = {
   entry: "./src/test.js",
   output: {
@@ -16,5 +25,8 @@ module.exports = {
         ]
       }
     ]
-  }
+  },
+  plugins: [
+    new TestPlugin()
+  ]
 }

@@ -5,6 +5,7 @@ const babelTypes = require("@babel/types")
 const babelTraverse = require("@babel/traverse").default
 const babelGenerator = require("@babel/generator").default
 const ejs = require("ejs")
+const { SyncHook } = require("tapable")
 
 class Compiler{
 
@@ -15,12 +16,30 @@ class Compiler{
     this.modules = {}
     this.root = process.cwd()
     this.assets = {}
+    this.hooks = {
+      entryOption: new SyncHook(),
+      compile: new SyncHook(),
+      afterCompile: new SyncHook(),
+      afterPulgins: new SyncHook(),
+      run: new SyncHook(),
+      emit: new SyncHook(),
+      done: new SyncHook(),
+    }
+    const plugins = this.config.plugins
+    if(Array.isArray(plugins)) {
+      plugins.forEach(plugin => plugin.apply(this))
+    }
+    this.hooks.afterPulgins.call()
   }
 
   run() {
+    this.hooks.run.call()
+    this.hooks.compile.call()
     this.buildModule(path.resolve(this.root,this.entry),true)
-
+    this.hooks.afterCompile.call()
     this.emitFile()
+    this.hooks.emit.call()
+    this.hooks.done.call()
   }
 
   buildModule(modulePath,isEntry) {
