@@ -55,7 +55,22 @@ class Compiler{
   }
 
   getSource(modulePath) {
-    const source = fs.readFileSync(modulePath,"utf-8")
+    let source = fs.readFileSync(modulePath,"utf-8")
+    const rules = this.config.module.rules
+    for(let i = 0; i < rules.length; i++) {
+      const { test,use } = rules[i]
+      let len = use.length - 1
+      if(test.test(modulePath)) {
+        function normalLoader() {
+          if(len >= 0) {
+            const loader = require(use[len--])
+            source = loader(source)
+            normalLoader()
+          }
+        }
+        normalLoader()
+      }
+    }
     return source
   }
 
